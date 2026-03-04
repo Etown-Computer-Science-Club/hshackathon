@@ -1,0 +1,201 @@
+PONG.PY — CODE EXPLAINED
+=========================
+
+HOW TO RUN
+----------
+  pip install -r requirements.txt
+  python3 pong.py
+
+
+CONTROLS
+--------
+  Left paddle  : W (up)  /  S (down)
+  Right paddle : UP arrow (up)  /  DOWN arrow (down)
+  Serve        : ENTER
+  Quit         : Close the window
+
+
+OVERVIEW
+--------
+The entire game lives in one file with no classes. It uses pygame,
+a Python library that handles the window, drawing, and input.
+The game runs in a loop: read input → update state → draw → repeat.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 1 — CONSTANTS
+─────────────────────────────────────────────────────────────────
+Numbers that never change during gameplay. Tweaking these is the
+easiest way to change how the game feels:
+
+  W, H          Window size in pixels (900 × 600)
+  PADDLE_W/H    Width and height of each paddle
+  INSET         How far each paddle is from the edge of the screen
+  BALL_SIZE     Diameter of the ball
+  PADDLE_SPEED  Pixels a paddle moves per frame
+  WIN_SCORE     Score needed to win (default 7)
+  INIT_SPEED    Ball speed at the start of each point
+  SPEED_INC     How much faster the ball gets after each hit
+  MAX_SPEED     Speed cap so the ball never gets unplayable
+  FPS           Frames per second the game tries to run at (60)
+
+Colors are plain RGB tuples (red, green, blue), each value 0–255.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 2 — STATE VARIABLES
+─────────────────────────────────────────────────────────────────
+These are the values that change while the game runs:
+
+  lp_y, rp_y   Y position of the top of the left and right paddles
+  bx, by       X and Y position of the center of the ball
+  bvx, bvy     Ball velocity — how many pixels it moves per frame
+               on the X axis (bvx) and Y axis (bvy)
+  l_score      Left player's score
+  r_score      Right player's score
+  state        The current phase of the game:
+                 "waiting"  — ball is stopped, waiting for ENTER
+                 "playing"  — ball is in motion
+                 "gameover" — someone reached WIN_SCORE
+
+All of these are plain global variables. Any function that needs
+to change them declares them with the `global` keyword first.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 3 — reset()
+─────────────────────────────────────────────────────────────────
+Moves the ball back to the center of the screen and resets both
+paddles to the vertical midpoint. Ball velocity is set to zero
+so nothing moves until the next serve.
+
+Called at startup, after each point, and when restarting after
+a game over.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 4 — launch_ball()
+─────────────────────────────────────────────────────────────────
+Gives the ball a random starting velocity when ENTER is pressed.
+
+  1. Picks a random angle between -20 and +20 degrees so the ball
+     doesn't always travel in a perfectly straight line.
+  2. Randomly picks a direction: left (-1) or right (+1).
+  3. Uses cos/sin to split INIT_SPEED into X and Y components
+     that match the chosen angle.
+
+This means every serve looks and feels a little different.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 5 — update(keys)
+─────────────────────────────────────────────────────────────────
+The core game logic. Runs every frame and does four things:
+
+1. MOVE PADDLES
+   Checks which keys are currently held (pygame.key.get_pressed()
+   returns a live snapshot). Moves the matching paddle up or down
+   by PADDLE_SPEED pixels, clamped so paddles can't leave the screen.
+
+2. MOVE THE BALL
+   Adds bvx to bx and bvy to by each frame, so the ball travels
+   in a straight line until something deflects it.
+
+3. COLLISION DETECTION
+
+   Wall bounce:
+     If the ball's top edge reaches y=0 (top wall), flip bvy
+     to positive so it bounces downward.
+     If the ball's bottom edge reaches y=H, flip bvy to negative.
+
+   Paddle collision (same logic for both paddles):
+     Check that the ball is moving toward the paddle, that its
+     horizontal position overlaps the paddle's face, and that its
+     vertical position is within the paddle's top and bottom edges.
+     If all three are true:
+       - Push the ball back so it isn't overlapping the paddle.
+       - Reverse bvx so the ball flies the other way.
+       - Add "english" (see below) to vary the bounce angle.
+       - Call speed_up() to make the rally faster.
+
+4. SCORING
+   If the ball exits the left side, the right player scores.
+   If it exits the right side, the left player scores.
+   next_point() is called to reset the ball and check for a winner.
+
+Helper functions used by update():
+
+  english(ball_cy, paddle_top)
+    Calculates a small adjustment to bvy based on where the ball
+    hit the paddle. Hitting the center keeps the angle flat.
+    Hitting near the top or bottom adds a steeper vertical angle,
+    giving players control over where the ball goes.
+
+  speed_up()
+    Increases ball speed by SPEED_INC after each paddle hit.
+    To keep the direction the same while changing the speed, it
+    scales both bvx and bvy by the same ratio rather than just
+    adding to one of them.
+
+  next_point()
+    Calls reset(), then sets state to "gameover" if either player
+    has reached WIN_SCORE, or back to "waiting" otherwise.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 6 — draw()
+─────────────────────────────────────────────────────────────────
+Draws everything to the screen once per frame. Nothing here
+affects game logic — it only reads state, never changes it.
+
+Drawing order matters: things drawn later appear on top.
+
+  1. Fill the background black (clears the previous frame).
+  2. Draw the dashed center line using a loop of small rectangles.
+  3. Render and place the score numbers on each side.
+  4. Draw both paddles as rounded rectangles.
+  5. Draw the ball as a filled circle.
+  6. If state is "waiting", show "Press ENTER to serve".
+     If state is "gameover", show the winner and replay prompt.
+  7. Draw the control hints in the bottom corners.
+  8. Call pygame.display.flip() to push the finished frame to
+     the screen (swaps the back buffer to front).
+
+centered() is a small helper that renders a text string and
+automatically positions it horizontally in the middle of the window.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 7 — MAIN LOOP
+─────────────────────────────────────────────────────────────────
+The engine that keeps everything running:
+
+  reset()                   Set up the initial game state.
+
+  while True:               Loop forever until the window closes.
+
+    pygame.event.get()      Check for things that just happened
+                            (key presses, window close, etc.).
+      QUIT                  Close the window → quit cleanly.
+      KEYDOWN + K_RETURN    If waiting, serve the ball.
+                            If gameover, reset scores and restart.
+
+    update(get_pressed())   Run game logic for this frame using
+                            a live snapshot of all held keys.
+
+    draw()                  Render the updated state to the screen.
+
+    clock.tick(FPS)         Sleep just long enough to cap the loop
+                            at FPS frames per second, keeping speed
+                            consistent across different computers.
+
+
+─────────────────────────────────────────────────────────────────
+KEY CONCEPTS FOR BUILDING YOUR OWN GAME
+─────────────────────────────────────────────────────────────────
+  Game loop       while True: handle input → update → draw
+  Velocity        Change position by a small amount every frame
+  Bouncing        Flip the sign of a velocity component (bvy = -bvy)
+  AABB collision  Check if two rectangles overlap on both axes
+  State machine   A variable like `state` controls which logic runs
+  Delta time      clock.tick(FPS) keeps speed hardware-independent

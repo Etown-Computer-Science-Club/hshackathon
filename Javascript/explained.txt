@@ -1,0 +1,244 @@
+PONG.HTML — CODE EXPLAINED
+==========================
+
+HOW TO RUN
+----------
+  Open pong.html in any modern web browser.
+  No installs, no compiler, no server required.
+
+
+CONTROLS
+--------
+  Left paddle  : W (up)  /  S (down)
+  Right paddle : UP arrow (up)  /  DOWN arrow (down)
+  Serve        : ENTER
+  Quit         : Close the browser tab
+
+
+OVERVIEW
+--------
+The entire game lives in one HTML file. The HTML sets up a canvas
+element, the CSS centers it on a black page, and a <script> block
+contains all the game logic. The browser provides everything needed:
+a drawing surface (Canvas API), a frame-rate-synced game loop
+(requestAnimationFrame), and keyboard input (addEventListener).
+
+
+─────────────────────────────────────────────────────────────────
+HTML & CSS
+─────────────────────────────────────────────────────────────────
+The HTML body contains a single <canvas id="c"> element. The canvas
+is just a blank rectangle — JavaScript does all the drawing on it.
+
+The CSS uses flexbox to center the canvas both horizontally and
+vertically against a black background, so it looks correct on any
+screen size without extra math.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 1 — CONSTANTS
+─────────────────────────────────────────────────────────────────
+Declared with `const` so they can never be reassigned. Tweaking
+these is the easiest way to change how the game feels:
+
+  W, H          Canvas size in pixels (900 × 600)
+  PADDLE_W/H    Width and height of each paddle
+  INSET         How far each paddle is from the edge of the screen
+  BALL_SIZE     Diameter of the ball
+  PADDLE_SPEED  Pixels a paddle moves per frame
+  WIN_SCORE     Score needed to win (default 7)
+  INIT_SPEED    Ball speed at the start of each point
+  SPEED_INC     How much faster the ball gets after each paddle hit
+  MAX_SPEED     Speed cap so the ball never gets unplayable
+
+After the constants, the canvas element is grabbed from the DOM
+and sized, and a 2D drawing context (ctx) is obtained. ctx is the
+object used for every drawing call in the game.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 2 — STATE VARIABLES
+─────────────────────────────────────────────────────────────────
+Declared with `let` so they can change at runtime:
+
+  lpY, rpY     Y position of the top of the left and right paddles
+  bx, by       X and Y position of the center of the ball
+  bvx, bvy     Ball velocity — pixels moved per frame on each axis
+  lScore       Left player's score
+  rScore       Right player's score
+  state        The current phase of the game:
+                 "waiting"  — ball is stopped, waiting for ENTER
+                 "playing"  — ball is in motion
+                 "gameover" — someone reached WIN_SCORE
+
+`keys` is a plain object used as a dictionary. When a key is held,
+keys["w"] (for example) is set to true. When it is released, it is
+set to false. update() reads this map every frame to move paddles,
+giving smooth continuous movement without needing separate flags
+for each key like Java does.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 3 — reset()
+─────────────────────────────────────────────────────────────────
+Moves the ball back to the center and zeros its velocity. Resets
+both paddles to the vertical midpoint of the canvas.
+
+Called at startup, after each point, and when restarting after
+a game over.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 4 — launchBall()
+─────────────────────────────────────────────────────────────────
+Gives the ball a random starting velocity when ENTER is pressed.
+
+  1. Picks a random angle between -20 and +20 degrees.
+  2. Randomly picks a direction: left (-1) or right (+1).
+  3. Uses Math.cos/sin to split INIT_SPEED into X and Y components
+     that match the chosen angle.
+
+This means every serve looks and feels a little different.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 5 — update()
+─────────────────────────────────────────────────────────────────
+The core game logic. Runs every frame and does four things:
+
+1. MOVE PADDLES
+   Reads the `keys` map to check which keys are currently held.
+   Moves the matching paddle up or down by PADDLE_SPEED pixels,
+   clamped so paddles can't leave the canvas.
+
+2. MOVE THE BALL
+   Adds bvx to bx and bvy to by each frame so the ball travels
+   in a straight line until something deflects it.
+
+3. COLLISION DETECTION
+
+   Wall bounce:
+     If the ball's top edge reaches y=0, flip bvy to positive so
+     it bounces downward. If the bottom edge reaches y=H, flip bvy
+     to negative. The ball is nudged back inside to prevent it
+     from getting stuck in the wall.
+
+   Paddle collision (same logic for both paddles):
+     Three conditions must all be true at once:
+       - The ball is moving toward that paddle (bvx direction).
+       - The ball's horizontal position overlaps the paddle face.
+       - The ball's vertical center is within the paddle's height.
+     If all three are true:
+       - Push the ball back to just outside the paddle face.
+       - Reverse bvx so the ball flies the other way.
+       - Add "english" (see below) to vary the bounce angle.
+       - Call speedUp() to make the rally faster.
+
+4. SCORING
+   If the ball exits the left side, the right player scores.
+   If it exits the right side, the left player scores.
+   nextPoint() is called to reset and check for a winner.
+
+Helper functions used by update():
+
+  english(ballCY, paddleTop)
+    Calculates a small adjustment to bvy based on where the ball
+    hit the paddle. Hitting the center keeps the angle flat.
+    Hitting near the edges adds a steeper vertical angle, giving
+    players control over where the ball goes after contact.
+
+  speedUp()
+    Increases ball speed by SPEED_INC after each hit, up to
+    MAX_SPEED. Uses Math.hypot() to get the current speed, then
+    scales both bvx and bvy by the same ratio so the direction
+    is preserved while only the magnitude increases.
+
+  nextPoint()
+    Calls reset(), then sets state to "gameover" if either player
+    has reached WIN_SCORE, or back to "waiting" otherwise.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 6 — draw()
+─────────────────────────────────────────────────────────────────
+Draws everything to the canvas once per frame. Nothing here
+affects game logic — it only reads state, never changes it.
+
+Drawing order matters: things drawn later appear on top.
+
+All drawing goes through the `ctx` (CanvasRenderingContext2D)
+object. Key drawing methods used:
+
+  ctx.fillRect()      Fills a rectangle (used for background)
+  ctx.beginPath()     Starts a new shape
+  ctx.moveTo/lineTo() Draws a line path
+  ctx.roundRect()     Draws a rounded rectangle (paddles)
+  ctx.arc()           Draws a circle (ball)
+  ctx.fill/stroke()   Actually renders the current path
+  ctx.fillText()      Renders a string of text
+  ctx.measureText()   Returns the pixel width of a string
+
+  1. Fill the entire canvas black to clear the previous frame.
+  2. Draw the dashed center line using setLineDash([12,12]) to
+     set the dash pattern, then reset it with setLineDash([]).
+  3. Measure each score string's width to right/left-align them
+     on either side of center.
+  4. Draw both paddles as rounded rectangles.
+  5. Draw the ball as a filled circle using ctx.arc().
+  6. If state is "waiting", show "Press ENTER to serve".
+     If state is "gameover", show the winner and replay prompt.
+  7. Draw control hints in the bottom corners.
+
+centered() is a helper that renders a text string and
+automatically positions it horizontally in the middle of the canvas.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 7 — INPUT
+─────────────────────────────────────────────────────────────────
+Two event listeners are attached to the document:
+
+keydown
+  Sets keys[e.key] = true so update() knows the key is held.
+  Also handles ENTER for state transitions: serve or restart.
+  Calls e.preventDefault() for arrow keys and space to stop
+  the browser from scrolling the page during gameplay.
+
+keyup
+  Sets keys[e.key] = false so the paddle stops moving as soon
+  as the key is released.
+
+e.key returns the string name of the key pressed, for example
+"w", "s", "ArrowUp", "ArrowDown", or "Enter". These strings are
+used directly as keys in the `keys` map.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 8 — GAME LOOP
+─────────────────────────────────────────────────────────────────
+The engine that keeps everything running:
+
+  reset()                   Set up the initial game state.
+  requestAnimationFrame()   Ask the browser to call loop() before
+                            the next screen repaint (~60 FPS).
+
+  loop() calls update(), then draw(), then schedules itself again
+  with another requestAnimationFrame(). This creates a continuous
+  cycle that is automatically synced to the display's refresh rate
+  and paused by the browser when the tab is not visible.
+
+  This is different from Java's fixed-interval Timer or Python's
+  clock.tick(FPS) — the browser controls the timing, not the code.
+
+
+─────────────────────────────────────────────────────────────────
+KEY CONCEPTS FOR BUILDING YOUR OWN GAME
+─────────────────────────────────────────────────────────────────
+  Game loop       requestAnimationFrame → update → draw → repeat
+  Canvas API      ctx methods do all drawing; clear each frame
+  Key map         An object tracks held keys for smooth movement
+  Velocity        Change position by a small amount every frame
+  Bouncing        Flip the sign of a velocity component (bvy = -bvy)
+  AABB collision  Check if two rectangles overlap on both axes
+  State machine   The `state` string controls which logic runs
+  No install      Runs in any browser — just open the HTML file

@@ -1,0 +1,238 @@
+PONG.JAVA — CODE EXPLAINED
+==========================
+
+HOW TO RUN
+----------
+  javac Pong.java
+  java Pong
+
+
+CONTROLS
+--------
+  Left paddle  : W (up)  /  S (down)
+  Right paddle : UP arrow (up)  /  DOWN arrow (down)
+  Serve        : ENTER
+  Quit         : Close the window
+
+
+OVERVIEW
+--------
+The entire game lives in one file and one class. It uses Java Swing,
+a built-in GUI library that handles the window, drawing, and input.
+The class extends JPanel (a drawable surface) and implements two
+interfaces: ActionListener (to receive timer ticks) and KeyListener
+(to receive keyboard events). The game runs in a loop driven by a
+Swing Timer: every 16ms it calls update() then repaints the panel.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 1 — CONSTANTS
+─────────────────────────────────────────────────────────────────
+Declared as `static final`, meaning they belong to the class itself
+and can never be changed after compile time. Tweaking these is the
+easiest way to change how the game feels:
+
+  W, H          Window size in pixels (900 × 600)
+  PADDLE_W/H    Width and height of each paddle
+  INSET         How far each paddle is from the edge of the screen
+  BALL_SIZE     Diameter of the ball
+  PADDLE_SPEED  Pixels a paddle moves per frame
+  WIN_SCORE     Score needed to win (default 7)
+  INIT_SPEED    Ball speed at the start of each point
+  SPEED_INC     How much faster the ball gets after each paddle hit
+  MAX_SPEED     Speed cap so the ball never gets unplayable
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 2 — STATE VARIABLES
+─────────────────────────────────────────────────────────────────
+Instance variables that change while the game runs:
+
+  lpY, rpY     Y position of the top of the left and right paddles
+  bX, bY       X and Y position of the center of the ball
+  bVX, bVY     Ball velocity — pixels moved per frame on each axis
+  lScore       Left player's score
+  rScore       Right player's score
+  lUp, lDown   Whether the left player's keys are currently held
+  rUp, rDown   Whether the right player's keys are currently held
+  state        The current phase of the game:
+                 "waiting"  — ball is stopped, waiting for ENTER
+                 "playing"  — ball is in motion
+                 "gameover" — someone reached WIN_SCORE
+
+Because Java is object-oriented, all of these belong to a single
+Pong object. Methods access them directly without needing to pass
+them around or declare them global.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 3 — CONSTRUCTOR
+─────────────────────────────────────────────────────────────────
+Runs once when the Pong object is created (called from main).
+
+  setPreferredSize()    Tells the panel how big it wants to be.
+  setBackground()       Sets the background color to black.
+  setFocusable(true)    Required so the panel can receive key events.
+  addKeyListener(this)  Registers this class as its own key listener.
+  resetPositions()      Places ball and paddles at their start positions.
+  new Timer(16, this)   Creates a Swing Timer that fires every 16ms
+  .start()              (~60 FPS) and calls actionPerformed() each tick.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 4 — UPDATE (game logic, runs every frame)
+─────────────────────────────────────────────────────────────────
+actionPerformed() is called by the Timer every 16ms. It just calls
+update() then repaint(), which triggers paintComponent().
+
+update() does all the game logic:
+
+1. MOVE PADDLES
+   Checks the four boolean key flags. If a key is held and the
+   paddle hasn't hit the screen edge, moves it by PADDLE_SPEED.
+   This runs even when state is not "playing" so players can
+   position their paddle before the serve.
+
+2. MOVE THE BALL
+   Adds bVX to bX and bVY to bY each frame so the ball travels
+   in a straight line until something deflects it.
+
+3. COLLISION DETECTION
+
+   Wall bounce:
+     If the ball's top edge reaches y=0, flip bVY to positive
+     so it bounces downward. If the bottom edge reaches y=H,
+     flip bVY to negative. The ball is also nudged back inside
+     the screen to prevent it from getting stuck in the wall.
+
+   Paddle collision (same logic for both paddles):
+     Three conditions must all be true at once:
+       - The ball is moving toward that paddle (bVX direction).
+       - The ball's horizontal position overlaps the paddle face.
+       - The ball's vertical center is within the paddle's height.
+     If all three are true:
+       - Push the ball back to just outside the paddle face.
+       - Reverse bVX so the ball flies the other way.
+       - Add "english" (see Helpers) to vary the bounce angle.
+       - Call speedUp() to make the rally faster.
+
+4. SCORING
+   If the ball exits the left side, the right player scores.
+   If it exits the right side, the left player scores.
+   nextPoint() is called to reset the ball and check for a winner.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 5 — RENDERING (paintComponent)
+─────────────────────────────────────────────────────────────────
+Swing calls paintComponent() automatically whenever repaint() is
+called. A Graphics2D object is provided — this is the drawing tool.
+
+Drawing order matters: things drawn later appear on top.
+
+  super.paintComponent(g)   Clears the screen (paints background).
+  setRenderingHint()        Turns on anti-aliasing for smooth edges.
+
+  1. Draw the dashed center line using a custom BasicStroke with a
+     dash pattern, then reset the stroke to default afterward.
+  2. Set the font to bold 64pt and render each score. The left
+     score is right-aligned in the left half using FontMetrics
+     to measure the string width before placing it.
+  3. Draw both paddles as rounded rectangles with fillRoundRect().
+  4. Draw the ball as a filled oval with fillOval().
+  5. If state is "waiting", show "Press ENTER to serve".
+     If state is "gameover", show the winner and replay prompt.
+     centered() is a helper that horizontally centers any string.
+  6. Draw small control hints in the bottom corners.
+
+Note: Swing handles double-buffering automatically, which is why
+there is no flicker even though we redraw everything every frame.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 6 — HELPERS
+─────────────────────────────────────────────────────────────────
+launchBall()
+  Gives the ball a random starting velocity when ENTER is pressed.
+  Picks an angle between -20 and +20 degrees, randomly chooses a
+  left or right direction, then uses cos/sin to convert the angle
+  and INIT_SPEED into X and Y velocity components.
+
+resetPositions()
+  Moves the ball to the center, zeros its velocity, and resets
+  both paddles to the vertical midpoint of the screen.
+
+nextPoint()
+  Calls resetPositions(), then sets state to "gameover" if either
+  player has reached WIN_SCORE, or back to "waiting" otherwise.
+
+english(ballCY, paddleTopY)
+  Calculates a small adjustment to bVY based on where the ball
+  hit the paddle. Hitting the center keeps the angle flat.
+  Hitting near the top or bottom adds a steeper vertical angle,
+  giving players control over where the ball goes after contact.
+
+speedUp()
+  Increases ball speed by SPEED_INC after each paddle hit, up to
+  MAX_SPEED. Rather than just adding to one component, it scales
+  both bVX and bVY by the same ratio so the direction is preserved
+  while only the magnitude (speed) increases.
+
+centered(g2, text, y, size, color)
+  Renders a string centered horizontally on the screen. Uses
+  FontMetrics.stringWidth() to measure the text, then subtracts
+  half that width from the screen's center X position.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 7 — INPUT (KeyListener)
+─────────────────────────────────────────────────────────────────
+Java's KeyListener interface requires three methods:
+
+keyPressed()
+  Called the moment a key is pushed down. Uses a switch statement
+  on the key code to set the matching boolean flag to true (for
+  movement keys) or to handle game state transitions (for ENTER).
+
+keyReleased()
+  Called when a key is let go. Sets the matching flag back to false
+  so the paddle stops moving. This is why movement is smooth —
+  the flag stays true for as long as the key is held, and update()
+  moves the paddle a little each frame that the flag is true.
+
+keyTyped()
+  Required by the interface but not used here. It fires for
+  printable characters and is left empty.
+
+
+─────────────────────────────────────────────────────────────────
+SECTION 8 — MAIN
+─────────────────────────────────────────────────────────────────
+The entry point for the program. All Swing UI work must happen on
+the Event Dispatch Thread (EDT), so everything is wrapped in
+SwingUtilities.invokeLater() to schedule it correctly.
+
+  new JFrame("Pong")          Creates the application window.
+  EXIT_ON_CLOSE               Closes the app when the window closes.
+  setResizable(false)         Locks the window size.
+  new Pong()                  Creates the game panel (runs constructor).
+  f.add(game)                 Adds the panel to the window.
+  f.pack()                    Sizes the window to fit the panel.
+  setLocationRelativeTo(null) Centers the window on the screen.
+  setVisible(true)            Makes the window appear.
+  requestFocusInWindow()      Ensures keyboard input works immediately.
+
+
+─────────────────────────────────────────────────────────────────
+KEY CONCEPTS FOR BUILDING YOUR OWN GAME
+─────────────────────────────────────────────────────────────────
+  Game loop        Timer fires actionPerformed → update → repaint
+  Interfaces       ActionListener and KeyListener wire the class
+                   into Swing's event system
+  Key flags        Booleans track held keys; update() reads them
+                   every frame for smooth continuous movement
+  Velocity         Change position by a small amount every frame
+  Bouncing         Flip the sign of a velocity component (bVY = -bVY)
+  AABB collision   Check if two rectangles overlap on both axes
+  State machine    The `state` string controls which logic runs
+  Double buffering Swing handles this automatically via JPanel
