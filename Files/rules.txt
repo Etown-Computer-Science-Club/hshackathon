@@ -1,0 +1,50 @@
+HACKATHON GROUND RULES
+======================
+
+Welcome! Before you dive in, here are the rules and expectations
+for today's event. Read through these — they're short.
+
+─────────────────────────────────────────────────────────────────
+1. NO AI TOOLS
+─────────────────────────────────────────────────────────────────
+The use of AI coding assistants is not allowed. This includes
+ChatGPT, GitHub Copilot, Claude, and similar tools.
+
+This isn't about making things harder for the sake of it — it's
+about making sure the code you submit is actually yours. If you can't
+explain what your code does, it's not really your code.
+
+Allowed: Google, Stack Overflow, official documentation,
+         your notes, your brain.
+
+─────────────────────────────────────────────────────────────────
+2. BUILD WHATEVER YOU WANT
+─────────────────────────────────────────────────────────────────
+There is no required project type. You have full creative freedom.
+
+A game is a great starting point — it's visual, fun to demo, and
+covers a lot of real programming concepts. But if your team has a
+better idea, go for it. Apps, tools, simulations, websites — all
+of it is fair game.
+
+What we care about: that you built something real, that you can
+explain it, and that you're proud of it.
+
+─────────────────────────────────────────────────────────────────
+3. GENERAL EXPECTATIONS
+─────────────────────────────────────────────────────────────────
+  - All code must be written during the event. No pre-built
+    projects or recycled work from class.
+  - You may use open-source libraries and frameworks
+  - Be respectful to other teams, judges, and organizers.
+  - Have fun. Seriously — that's the point.
+
+─────────────────────────────────────────────────────────────────
+JUDGING
+─────────────────────────────────────────────────────────────────
+Projects will be scored on:
+  • Technical Difficulty   — how well you built it
+  • Creativity             — how original the idea is
+  • Completeness           — does it actually work?
+
+Good luck — we can't wait to see what you build.
