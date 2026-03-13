@@ -108,7 +108,7 @@ function update() {
             && by >= lpY && by <= lpY + PADDLE_H) {
         bx   = lFace + BALL_SIZE / 2;
         bvx  = Math.abs(bvx);
-        bvy += english(by, lpY);
+        bvy += calcDeflectionAngle(by, lpY);
         speedUp();
     }
 
@@ -120,7 +120,7 @@ function update() {
             && by >= rpY && by <= rpY + PADDLE_H) {
         bx   = rFace - BALL_SIZE / 2;
         bvx  = -Math.abs(bvx);
-        bvy += english(by, rpY);
+        bvy += calcDeflectionAngle(by, rpY);
         speedUp();
     }
 
@@ -135,7 +135,7 @@ function update() {
     }
 }
 
-function english(ballCY, paddleTop) {
+function calcDeflectionAngle(ballCY, paddleTop) {
     return ((ballCY - paddleTop) / PADDLE_H - 0.5) * 4;
 }
 

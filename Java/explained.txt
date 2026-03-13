@@ -113,7 +113,7 @@ update() does all the game logic:
      If all three are true:
        - Push the ball back to just outside the paddle face.
        - Reverse bVX so the ball flies the other way.
-       - Add "english" (see Helpers) to vary the bounce angle.
+       - Add "calcDeflectionAngle" (see Helpers) to vary the bounce angle.
        - Call speedUp() to make the rally faster.
 
 4. SCORING
@@ -166,7 +166,7 @@ nextPoint()
   Calls resetPositions(), then sets state to "gameover" if either
   player has reached WIN_SCORE, or back to "waiting" otherwise.
 
-english(ballCY, paddleTopY)
+calcDeflectionAngle(ballCY, paddleTopY)
   Calculates a small adjustment to bVY based on where the ball
   hit the paddle. Hitting the center keeps the angle flat.
   Hitting near the top or bottom adds a steeper vertical angle,

@@ -5,17 +5,20 @@ Welcome! Before you dive in, here are the rules and expectations
 for today's event. Read through these — they're short.
 
 ─────────────────────────────────────────────────────────────────
-1. NO AI TOOLS
+
+1. AI TOOLS
 ─────────────────────────────────────────────────────────────────
-The use of AI coding assistants is not allowed. This includes
+The use of AI coding assistants is permitted, but you may not
+over-rely on them to write your code for you. This includes
 ChatGPT, GitHub Copilot, Claude, and similar tools.
 
 This isn't about making things harder for the sake of it — it's
 about making sure the code you submit is actually yours. If you can't
 explain what your code does, it's not really your code.
-
+AI should be used as a reference, not a replacement for thinking.
+You are expected to understand every line you submit.
 Allowed: Google, Stack Overflow, official documentation,
-         your notes, your brain.
+your notes, your brain, AI tools (with discretion).
 
 ─────────────────────────────────────────────────────────────────
 2. BUILD WHATEVER YOU WANT

@@ -115,7 +115,7 @@ The core game logic. Runs every frame and does four things:
      If all three are true:
        - Push the ball back so it isn't overlapping the paddle.
        - Reverse bvx so the ball flies the other way.
-       - Add "english" (see below) to vary the bounce angle.
+       - Add "calcDeflectionAngle" (see below) to vary the bounce angle.
        - Call speed_up() to make the rally faster.
 
 4. SCORING
@@ -125,7 +125,7 @@ The core game logic. Runs every frame and does four things:
 
 Helper functions used by update():
 
-  english(ball_cy, paddle_top)
+  calcDeflectionAngle(ball_cy, paddle_top)
     Calculates a small adjustment to bvy based on where the ball
     hit the paddle. Hitting the center keeps the angle flat.
     Hitting near the top or bottom adds a steeper vertical angle,

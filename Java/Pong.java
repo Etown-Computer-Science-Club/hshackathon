@@ -71,7 +71,7 @@ public class Pong extends JPanel implements ActionListener, KeyListener {
                 && bY >= lpY && bY <= lpY + PADDLE_H) {
             bX = lFace + BALL_SIZE / 2.0;
             bVX = Math.abs(bVX);
-            bVY += english(bY, lpY);
+            bVY += calcDeflectionAngle(bY, lpY);
             speedUp();
         }
 
@@ -81,7 +81,7 @@ public class Pong extends JPanel implements ActionListener, KeyListener {
                 && bY >= rpY && bY <= rpY + PADDLE_H) {
             bX = rFace - BALL_SIZE / 2.0;
             bVX = -Math.abs(bVX);
-            bVY += english(bY, rpY);
+            bVY += calcDeflectionAngle(bY, rpY);
             speedUp();
         }
 
@@ -151,7 +151,7 @@ public class Pong extends JPanel implements ActionListener, KeyListener {
     }
 
     // How far from center the ball hit the paddle → steeper angle at edges
-    double english(double ballCY, double paddleTopY) {
+    double calcDeflectionAngle(double ballCY, double paddleTopY) {
         return ((ballCY - paddleTopY) / PADDLE_H - 0.5) * 4.0;
     }
 

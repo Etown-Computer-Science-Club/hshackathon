@@ -110,7 +110,7 @@ def update(keys):
             and lp_y <= by <= lp_y + PADDLE_H):
         bx = l_face + BALL_SIZE / 2
         bvx = abs(bvx)
-        bvy += english(by, lp_y)
+        bvy += calcDeflectionAngle(by, lp_y)
         speed_up()
 
     # Right paddle collision
@@ -121,7 +121,7 @@ def update(keys):
             and rp_y <= by <= rp_y + PADDLE_H):
         bx = r_face - BALL_SIZE / 2
         bvx = -abs(bvx)
-        bvy += english(by, rp_y)
+        bvy += calcDeflectionAngle(by, rp_y)
         speed_up()
 
     # Scoring
@@ -133,7 +133,7 @@ def update(keys):
         next_point()
 
 
-def english(ball_cy, paddle_top):
+def calcDeflectionAngle(ball_cy, paddle_top):
     return ((ball_cy - paddle_top) / PADDLE_H - 0.5) * 4.0
 
 
