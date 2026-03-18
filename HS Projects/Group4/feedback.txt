@@ -1,0 +1,11 @@
+Judges Feedback:
+1) The project is implemented well overall, and it’s clear a lot of effort went into it. There were some issues getting it to fully run, so reviewing setup steps or debugging any errors could help make it more reliable.
+2) The bars on the ends look like they’re intended to have a purpose, but their functionality isn’t fully clear or implemented yet. You could either complete their intended feature or clarify their role so players understand how they’re used. Aside from that, the project is really strong—nice work!
+3) Re-implementing the entire game in HTML is a bold and ambitious choice, and it really stands out. It shows a willingness to take on a challenge—great job pushing yourselves with that approach!
+
+Overall Placement: 5th
+
+Participants (in no particular order): 
+1) Kimberly Kulynycz
+2) Julian Alicea
+3) Camari Starks-Peters

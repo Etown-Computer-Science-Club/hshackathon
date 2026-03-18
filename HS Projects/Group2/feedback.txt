@@ -1,0 +1,12 @@
+Judges Feedback:
+1) The AI opponent is a really impressive feature and adds a lot to the game—great work implementing it!
+2) The paddle movement for the AI can feel a bit jittery or jumpy at times. You could improve this by smoothing how it tracks the ball’s position (for example, moving more gradually instead of instantly).
+3) Being able to play solo against the AI is a great idea and makes the game more engaging.
+4) To take it further, you could make the AI “smarter” by improving how it predicts the ball’s path or reacts to different situations, which would make gameplay more challenging and fun.
+
+Overall Placement: 3rd
+
+Participants (in no particular order): 
+1) Breelyn Beyer
+2) Riley Matthews
+3) Jayson Austine

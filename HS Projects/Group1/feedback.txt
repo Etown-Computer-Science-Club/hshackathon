@@ -1,0 +1,12 @@
+Judges Feedback:
+1) The reset/hammer feature is a cool idea, but it can feel a little unclear or inconsistent at times. You might improve it by making its behavior more predictable or adding a visual cue so players understand exactly what it does.
+2) Using the control button sometimes interferes with paddle movement. It could help to review how inputs are handled so that different controls don’t conflict with each other.
+3) The game overall works really well, and the core mechanics are solid—nice job getting everything functioning smoothly!
+4) The paddle expansion feature is a really creative touch. You could take it a step further by turning it into a power-up system (for example, temporary boosts or collectible upgrades) to make gameplay even more exciting.
+
+Overall Placement: 4th
+
+Participants (in no particular order): 
+1) Marshel Schlauderaff
+2) Jonah Mark Young
+3) Ethan Zook

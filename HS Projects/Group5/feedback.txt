@@ -1,0 +1,11 @@
+Judges Feedback:
+1) The rainbow ball is a really fun and visually engaging feature—it adds personality to the game. It’s also great that everything runs smoothly with no noticeable bugs.
+2) The game works very well overall, and the shrinking and growing paddles add a cool twist to the classic Pong concept. Nice job making the gameplay feel dynamic and interesting.
+3) The combination of the rainbow ball, paddle resizing, and changes in ball speed is very creative. You’ve done a great job turning these ideas into a polished, complete product—well done! 
+
+Overall Placement: 1st
+
+Participants (in no particular order): 
+1) Mark Burd
+2) Seth Eby
+3) Sincere Espada

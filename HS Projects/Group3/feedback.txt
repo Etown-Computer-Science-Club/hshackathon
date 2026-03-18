@@ -1,0 +1,11 @@
+Judges Feedback:
+1) The opening wording is engaging and sets a nice tone for the game—great job on presentation. The “Enter to restart” feature didn’t always work as expected, so you might want to double-check how that input is handled to make sure it consistently resets the game.
+2) The game functions well overall, which is great to see. To make it stand out even more, you could add a unique feature or twist to bring more originality to the gameplay.
+3) Some parts of the game interaction may feel a bit challenging for beginners. You could improve this by adding simple instructions or making controls more intuitive. The use of colors is a nice touch, and it’s great that all the basic functions are working properly.
+
+Overall Placement: 6th
+
+Participants (in no particular order): 
+1) Jairus Appiah
+2) Daniel
+3) Chance Smoker

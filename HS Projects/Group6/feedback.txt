@@ -1,0 +1,11 @@
+Judges Feedback:
+1) The addition of different AI levels and difficulty settings is a great feature—it adds depth to the game and shows strong creativity. The overall experience feels polished and well put together.
+2) The AI implementation works really well, and having multiple settings is a nice touch. Everything runs smoothly, which is great to see.
+3) The different difficulty levels are a strong idea, but it can be a bit hard to tell the differences between them while playing. You could improve this by making the changes more noticeable or adding a brief description of what each difficulty does.
+
+Overall Placement: 2nd
+
+Participants (in no particular order): 
+1) Roslyn Dietrich
+2) Skylar Moua
+3) Jesse Satuffer
