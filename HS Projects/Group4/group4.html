@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pong</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+/*
+ * PONG — single-file JS game built with Canvas.
+ * Controls: Left = W/S   Right = UP/DOWN   Serve = ENTER
+ *
+ * File structure:
+ *   1. Constants       – tweak these to change game feel
+ *   2. State           – everything that changes at runtime
+ *   3. reset()         – re-centers ball and paddles
+ *   4. launchBall()    – randomizes starting velocity
+ *   5. update()        – moves objects, checks collisions/scoring
+ *   6. draw()          – renders the current frame
+ *   7. Input           – keydown / keyup listeners
+ *   8. Game loop       – requestAnimationFrame driver
+ */
+
+// ── 1. CONSTANTS
+const W            = 900;
+const H            = 600;
+const PADDLE_W     = 14;
+const PADDLE_H     = 90;
+const INSET        = 50;
+const BALL_SIZE    = 16;
+const PADDLE_SPEED = 6;
+const WIN_SCORE    = 7;
+const INIT_SPEED   = 5;
+const SPEED_INC    = 0.4;
+const MAX_SPEED    = 14;
+const BRICK_W  = 20;
+const BRICK_H = 75;
+const BRICK_X = 0;
+const BRICK_X2 = 880;
+const BRICK_Y = 0;
+
+const canvas = document.getElementById("c");
+canvas.width  = W;
+canvas.height = H;
+const ctx = canvas.getContext("2d");
+
+// ── 2. STATE────
+let lpY, rpY;           // paddle Y positions
+let bx, by, bvx, bvy;  // ball position & velocity
+let lScore, rScore;
+let state;              // "waiting" | "playing" | "gameover"
+const keys = {};        // held key map
+
+// ── 3. RESET────
+function reset() {
+    bx = W / 2;
+    by = H / 2;
+    bvx = bvy = 0;
+    lpY = rpY = (H - PADDLE_H) / 2;
+}
+
+// ── 4. LAUNCH BALL
+function launchBall() {
+    const angle = (Math.random() * 40 - 20) * Math.PI / 180;
+    const dir   = Math.random() > 0.5 ? 1 : -1;
+    bvx = dir * INIT_SPEED * Math.cos(angle);
+    bvy =       INIT_SPEED * Math.sin(angle);
+}
+
+// ── 5. UPDATE───
+function update() {
+    if (keys["w"] && lpY > 0)
+        lpY -= PADDLE_SPEED;
+    if (keys["s"] && lpY < H - PADDLE_H)
+        lpY += PADDLE_SPEED;
+    if (keys["ArrowUp"] && rpY > 0)
+        rpY -= PADDLE_SPEED;
+    if (keys["ArrowDown"] && rpY < H - PADDLE_H)
+        rpY += PADDLE_SPEED;
+
+    if (state !== "playing") return;
+
+    bx += bvx;
+    by += bvy;
+
+    // Wall bounce
+    if (by - BALL_SIZE / 2 <= 0) {
+        by  = BALL_SIZE / 2;
+        bvy = Math.abs(bvy);
+    }
+    if (by + BALL_SIZE / 2 >= H) {
+        by  = H - BALL_SIZE / 2;
+        bvy = -Math.abs(bvy);
+    }
+
+    // Left paddle collision
+    const lFace = INSET + PADDLE_W;
+    if (bvx < 0
+            && bx - BALL_SIZE / 2 <= lFace
+            && bx + BALL_SIZE / 2 >= INSET
+            && by >= lpY && by <= lpY + PADDLE_H) {
+        bx   = lFace + BALL_SIZE / 2;
+        bvx  = Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, lpY);
+        speedUp();
+    }
+
+    // Right paddle collision
+    const rFace = W - INSET - PADDLE_W;
+    if (bvx > 0
+            && bx + BALL_SIZE / 2 >= rFace
+            && bx - BALL_SIZE / 2 <= W - INSET
+            && by >= rpY && by <= rpY + PADDLE_H) {
+        bx   = rFace - BALL_SIZE / 2;
+        bvx  = -Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, rpY);
+        speedUp();
+    }
+
+    //Left bricks collision
+     const bFace = INSET + BRICK_W;
+    if (bvx < 0
+            && bx - BALL_SIZE / 2 <= bFace
+            && bx + BALL_SIZE / 2 >= INSET
+            && by >= BRICK_Y && by <= BRICK_Y + BRICK_W) {
+        bx   = bFace + BALL_SIZE / 2;
+        bvx  = Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, lpY);
+        speedUp();
+    }
+
+     if (bvx < 0
+            && bx - BALL_SIZE / 2 <= bFace
+            && bx + BALL_SIZE / 2 >= INSET
+            && by >= BRICK_Y * 2 && by <= BRICK_Y * 2 + BRICK_W) {
+        bx   = bFace + BALL_SIZE / 2;
+        bvx  = Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, lpY);
+        speedUp();
+    }
+
+     if (bvx < 0
+            && bx - BALL_SIZE / 2 <= bFace
+            && bx + BALL_SIZE / 2 >= INSET
+            && by >= BRICK_Y * 3 && by <= BRICK_Y * 3 + BRICK_W) {
+        bx   = bFace + BALL_SIZE / 2;
+        bvx  = Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, lpY);
+        speedUp();
+    }
+
+     if (bvx < 0
+            && bx - BALL_SIZE / 2 <= bFace
+            && bx + BALL_SIZE / 2 >= INSET
+            && by >= BRICK_Y * 4 && by <= BRICK_Y * 4 + BRICK_W) {
+        bx   = bFace + BALL_SIZE / 2;
+        bvx  = Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, lpY);
+        speedUp();
+    }
+
+     if (bvx < 0
+            && bx - BALL_SIZE / 2 <= bFace
+            && bx + BALL_SIZE / 2 >= INSET
+            && by >= BRICK_Y * 5 && by <= BRICK_Y * 5 + BRICK_W) {
+        bx   = bFace + BALL_SIZE / 2;
+        bvx  = Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, lpY);
+        speedUp();
+    }
+
+     if (bvx < 0
+            && bx - BALL_SIZE / 2 <= bFace
+            && bx + BALL_SIZE / 2 >= INSET
+            && by >= BRICK_Y * 6 && by <= BRICK_Y * 6 + BRICK_W) {
+        bx   = bFace + BALL_SIZE / 2;
+        bvx  = Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, lpY);
+        speedUp();
+    }
+
+
+
+    //Right brick collision
+    const brFace = W - INSET - BRICK_W;
+    if (bvx > 0
+            && bx + BALL_SIZE / 2 >= brFace
+            && bx - BALL_SIZE / 2 <= W - INSET
+            && by >= BRICK_Y && by <= BRICK_Y + BRICK_W) {
+        bx   = brFace - BALL_SIZE / 2;
+        bvx  = -Math.abs(bvx);
+        bvy += calcDeflectionAngle(by, rpY);
+        speedUp();
+    }
+
+    // Scoring
+    if (bx + BALL_SIZE / 2 < 0) {
+        rScore++;
+        nextPoint();
+    }
+    if (bx - BALL_SIZE / 2 > W) {
+        lScore++;
+        nextPoint();
+    }
+}
+
+function calcDeflectionAngle(ballCY, paddleTop) {
+    return ((ballCY - paddleTop) / PADDLE_H - 0.5) * 4;
+}
+
+function speedUp() {
+    const spd   = Math.hypot(bvx, bvy);
+    const scale = Math.min(spd + SPEED_INC, MAX_SPEED) / spd;
+    bvx *= scale;
+    bvy *= scale;
+}
+
+function nextPoint() {
+    reset();
+    const won = lScore >= WIN_SCORE || rScore >= WIN_SCORE;
+    state = won ? "gameover" : "waiting";
+}
+
+// ── 6. DRAW─────
+function centered(text, y, size, color) {
+    ctx.fillStyle = color;
+    ctx.font = `bold ${size}px Courier New`;
+    ctx.fillText(text, (W - ctx.measureText(text).width) / 2, y);
+}
+
+function draw() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, W, H);
+
+    // Dashed center line
+    ctx.strokeStyle = "#333";
+    ctx.setLineDash([12, 12]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 0);
+    ctx.lineTo(W / 2, H);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Scores
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 64px Courier New";
+    const lw = ctx.measureText(String(lScore)).width;
+    ctx.fillText(String(lScore), W / 2 - lw - 40, 80);
+    ctx.fillText(String(rScore), W / 2 + 40, 80);
+
+    // Paddles
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.roundRect(INSET, lpY, PADDLE_W, PADDLE_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(W - INSET - PADDLE_W, rpY, PADDLE_W, PADDLE_H, 4);
+    ctx.fill();
+
+   
+
+    // Ball
+    ctx.beginPath();
+    ctx.arc(bx, by, BALL_SIZE / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Overlay messages
+    if (state === "waiting")
+        centered("Press ENTER to serve", H / 2 + 30, 22, "#ccc");
+    if (state === "gameover") {
+        const winner = lScore >= WIN_SCORE ? "LEFT" : "RIGHT";
+        centered(`${winner} PLAYER WINS!`, H / 2 - 20, 40, "#ff0");
+        centered("Press ENTER to play again", H / 2 + 35, 22, "#ccc");
+    }
+
+    // Control hints
+    ctx.fillStyle = "#666";
+    ctx.font = "13px Courier New";
+    ctx.fillText("Left: W/S", 20, H - 12);
+    const hint = "Right: \u2191/\u2193";
+    ctx.fillText(hint, W - ctx.measureText(hint).width - 20, H - 12);
+}
+
+function bricks(){
+    // Bricks
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X, BRICK_Y, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X2, BRICK_Y, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X, BRICK_Y + BRICK_H, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X2, BRICK_Y + BRICK_H, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X, BRICK_Y + BRICK_H * 2, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X2, BRICK_Y + BRICK_H * 2, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+   
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X, BRICK_Y + BRICK_H * 3, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X2, BRICK_Y + BRICK_H * 3, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X, BRICK_Y + BRICK_H * 4, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X2, BRICK_Y + BRICK_H * 4, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X, BRICK_Y + BRICK_H * 5, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X2, BRICK_Y + BRICK_H * 5, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+
+     ctx.beginPath();
+    ctx.roundRect(BRICK_X, BRICK_Y + BRICK_H * 6, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X2, BRICK_Y + BRICK_H * 6, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+
+     ctx.beginPath();
+    ctx.roundRect(BRICK_X, BRICK_Y + BRICK_H * 7, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(BRICK_X2, BRICK_Y + BRICK_H * 7, BRICK_W, BRICK_H, 4);
+    ctx.fill();
+}
+
+// ── 7. INPUT────
+document.addEventListener("keydown", e => {
+    keys[e.key] = true;
+    if (e.key === "Enter") {
+        if (state === "waiting") {
+            launchBall();
+            state = "playing";
+        }
+        if (state === "gameover") {
+            lScore = rScore = 0;
+            reset();
+            state = "waiting";
+        }
+    }
+    if (["ArrowUp", "ArrowDown", " "].includes(e.key))
+        e.preventDefault();
+});
+document.addEventListener("keyup", e => { keys[e.key] = false; });
+
+// ── 8. GAME LOOP
+lScore = rScore = 0;
+state  = "waiting";
+reset();
+
+function loop() {
+    update();
+    draw();
+    bricks();
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
